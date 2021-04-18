@@ -5,9 +5,14 @@ const socketIO = require("socket.io");
 
 const PORT = process.env.PORT || 3001;
 
+const corsOptions = {
+  origin: "https://simple-socket-chat-frontend.herokuapp.com",
+  optionsSuccessStatus: 200,
+};
+
 const server = express()
-  // .use((req, res) => res.sendFile(INDEX, { root: __dirname }))
-  .use(cors())
+  .use(cors(corsOptions))
+  .options("*", cors())
   .get("/", (req, res) => res.send("Connected"))
   .listen(PORT, () => console.log(`Listening on ${PORT}`));
 
