@@ -6,7 +6,7 @@ const socketIO = require("socket.io");
 const PORT = process.env.PORT || 3001;
 
 const corsOptions = {
-  origin: "https://simple-socket-chat-frontend.herokuapp.com",
+  origin: process.env.CHAT_ORIGIN,
   optionsSuccessStatus: 200,
 };
 
