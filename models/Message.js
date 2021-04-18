@@ -29,18 +29,6 @@ const MessageSchema = new Schema({
   },
 });
 
-async function updateUserPrivateMessage(userId, messageId) {
-  try {
-    return await UserModel.findOneAndUpdate(
-      { _id: userId },
-      { $addToSet: { privateMessages: messageId } },
-      { new: true },
-    );
-  } catch (error) {
-    console.error("error when update direct user message", error);
-  }
-}
-
 let MessageModel;
 
 MessageSchema.statics.addPrivateMessage = async function ({ message, userId, directUserId }) {
@@ -58,8 +46,9 @@ MessageSchema.statics.addPrivateMessage = async function ({ message, userId, dir
       model: "User",
     });
 
-    await updateUserPrivateMessage(userId, newMessage._id);
-    await updateUserPrivateMessage(directUserId, newMessage._id);
+    await UserModel.addPrivateMessages(userId, newMessage._id);
+    await UserModel.addPrivateMessages(directUserId, newMessage._id);
+    await UserModel.addUnseenMessages(directUserId, userId);
 
     return withOwner;
   } catch (error) {

@@ -43,6 +43,16 @@ const UserSchema = new Schema({
       ref: "Message",
     },
   ],
+  unseenMessages: [
+    {
+      from: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+      count: { type: Number, default: 0 },
+      required: false,
+    },
+  ],
 });
 
 // Create and add avatar to user
@@ -113,6 +123,67 @@ UserSchema.statics.signup = async function ({ username, password, email }) {
     return createToken({ username, email }, process.env.SECRET, "1hr");
   } catch (error) {
     console.error("error when add new user", error);
+    throw error;
+  }
+};
+
+UserSchema.statics.addPrivateMessages = async function (userId, messageId) {
+  try {
+    return await UserModel.findOneAndUpdate(
+      { _id: userId },
+      { $addToSet: { privateMessages: messageId } },
+      { new: true },
+    );
+  } catch (error) {
+    console.error("error when add direct user messages", error);
+    throw error;
+  }
+};
+
+UserSchema.statics.addUnseenMessages = async function (userId, fromUserId) {
+  try {
+    const user = await UserModel.findById(userId);
+    const isHaveMessageFromUser = user.unseenMessages.some((m) => m.from.toString() === fromUserId);
+
+    if (isHaveMessageFromUser) {
+      return await UserModel.update(
+        {
+          _id: userId,
+          unseenMessages: { $elemMatch: { from: fromUserId } },
+        },
+        { $inc: { "unseenMessages.$.count": 1 } },
+      );
+    }
+
+    return await UserModel.findOneAndUpdate(
+      { _id: userId },
+      {
+        $addToSet: {
+          unseenMessages: {
+            from: fromUserId,
+            count: 1,
+          },
+        },
+      },
+      { new: true },
+    );
+  } catch (error) {
+    console.error("error when add unseen messages", error);
+    throw error;
+  }
+};
+
+UserSchema.statics.resetUnseenMessages = async function (userId, fromUserId) {
+  try {
+    return await UserModel.update(
+      {
+        _id: userId,
+        unseenMessages: { $elemMatch: { from: fromUserId } },
+      },
+      { $set: { "unseenMessages.$.count": 0 } },
+    );
+  } catch (error) {
+    console.error("error when reset unseen message", error);
     throw error;
   }
 };
