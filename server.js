@@ -69,8 +69,6 @@ async function requestMaker(Controller, method, params, username) {
   }
 }
 
-io.origins(["http://localhost:3000", "https://simple-socket-chat-frontend.herokuapp.com"]);
-
 io.on("connection", async function (socket) {
   let addedUser = false;
 
