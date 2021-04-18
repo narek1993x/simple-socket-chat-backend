@@ -1,11 +1,14 @@
 require("dotenv").config();
 const express = require("express");
+const cors = require("cors");
 const socketIO = require("socket.io");
 
 const PORT = process.env.PORT || 3001;
 
 const server = express()
   // .use((req, res) => res.sendFile(INDEX, { root: __dirname }))
+  .use(cors())
+  .get("/", (req, res) => res.send("Connected"))
   .listen(PORT, () => console.log(`Listening on ${PORT}`));
 
 const io = socketIO(server);
