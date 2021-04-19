@@ -23,19 +23,19 @@ mongoose.set("useFindAndModify", false);
 
 const SocketController = require("./controllers/Socket");
 
+if (!process.env.MONGO_URI) {
+  throw new Error("You must provide a MongoLab URI");
+}
+
 // Local DB
-const MONGO_URI = `mongodb://localhost:27017/simple-socket-chat`;
+// const MONGO_URI = `mongodb://localhost:27017/simple-socket-chat`;
 const OPTS = {
   useNewUrlParser: true,
   useCreateIndex: true,
 };
 
-// if (!process.env.MONGO_URI) {
-//   throw new Error("You must provide a MongoLab URI");
-// }
-
 mongoose.Promise = global.Promise;
-mongoose.connect(MONGO_URI, OPTS);
+mongoose.connect(process.env.MONGO_URI, OPTS);
 mongoose.connection
   .once("open", () => console.log("Connected to MongoLab instance."))
   .on("error", (error) => console.log("Error connecting to MongoLab:", error));
