@@ -6,7 +6,15 @@ class UserController {
   }
 
   static async updateStatus(username, online) {
-    await UserModel.findOneAndUpdate({ username }, { $set: { online } }, { new: true });
+    return await UserModel.findOneAndUpdate({ username }, { $set: { online } }, { new: true });
+  }
+
+  static async getUserUnseenMessages(userId) {
+    return await UserModel.findById(userId).select("unseenMessages");
+  }
+
+  static async resetUnseenMessages(userId, fromUserId) {
+    return await UserModel.resetUnseenMessages(userId, fromUserId);
   }
 
   static async getUserPrivateMessages(userId, currentUserId) {

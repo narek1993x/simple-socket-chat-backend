@@ -6,6 +6,7 @@ const MessageController = require("./Message");
 const socketActions = {
   USER_JOINED: "user_joined",
   USER_LEFT: "user_left",
+  USER_UPDATE: "user_update",
   LOGIN: "login",
   ERROR: "error",
 };
@@ -65,18 +66,20 @@ class SocketController {
   }
 
   async messageHandler({ socket, action, body }) {
-    const newMessage = await this.requestMaker(MessageController, "addMessage", body);
+    const message = await this.requestMaker(MessageController, "addMessage", body);
 
     return socket.to(body.roomName).emit("response", {
       action,
-      response: newMessage,
+      response: message,
     });
   }
 
   async privateMessageHandler({ action, body }) {
-    const newPrivateMessage = await this.requestMaker(MessageController, "addPrivateMessage", body);
+    const message = await this.requestMaker(MessageController, "addPrivateMessage", body);
+    const { unseenMessages } = await this.requestMaker(UserController, "getUserUnseenMessages", body.directUserId);
 
-    return this.directAction(action, body.username, newPrivateMessage);
+    this.directAction(socketActions.USER_UPDATE, body.username, { fromUserId: body.userId, unseenMessages });
+    return this.directAction(action, body.username, message);
   }
 
   typingHandler({ socket, action, body }) {
@@ -127,6 +130,7 @@ class SocketController {
       body.id,
       body.currentUserId,
     );
+    await this.requestMaker(UserController, "resetUnseenMessages", body.currentUserId, body.id);
 
     return socket.emit("response", {
       action,
