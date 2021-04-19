@@ -146,7 +146,7 @@ UserSchema.statics.addUnseenMessages = async function (userId, fromUserId) {
     const isHaveMessageFromUser = user.unseenMessages.some((m) => m.from.toString() === fromUserId);
 
     if (isHaveMessageFromUser) {
-      return await UserModel.updateOne(
+      return await UserModel.update(
         {
           _id: userId,
           unseenMessages: { $elemMatch: { from: fromUserId } },
@@ -175,7 +175,7 @@ UserSchema.statics.addUnseenMessages = async function (userId, fromUserId) {
 
 UserSchema.statics.resetUnseenMessages = async function (userId, fromUserId) {
   try {
-    return await UserModel.updateOne(
+    return await UserModel.update(
       {
         _id: userId,
         unseenMessages: { $elemMatch: { from: fromUserId } },
