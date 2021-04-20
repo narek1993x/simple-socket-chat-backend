@@ -1,7 +1,11 @@
 const { RoomModel } = require("../models/Room");
 
 class RoomController {
-  static async getAll() {
+  static async getAll(selectFields) {
+    if (Array.isArray(selectFields)) {
+      return await RoomModel.find({}).select(selectFields);
+    }
+
     return await RoomModel.find({});
   }
 
@@ -18,6 +22,7 @@ class RoomController {
         populate: {
           path: "createdBy",
           model: "User",
+          select: "username",
         },
       });
 

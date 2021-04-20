@@ -192,8 +192,8 @@ class SocketController {
       await this.requestMaker(UserController, "updateStatus", user.username, true);
     }
 
-    const users = await this.requestMaker(UserController, "getAll");
-    const rooms = await this.requestMaker(RoomController, "getAll");
+    const users = await this.requestMaker(UserController, "getAll", ["username", "unseenMessages", "online"]);
+    const rooms = await this.requestMaker(RoomController, "getAll", ["name"]);
 
     let currentUser;
     if (user && user.username) {

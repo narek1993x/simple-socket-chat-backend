@@ -44,6 +44,7 @@ MessageSchema.statics.addPrivateMessage = async function ({ message, userId, dir
     const withOwner = await MessageModel.findById(newMessage._id).populate({
       path: "createdBy",
       model: "User",
+      select: "username",
     });
 
     await UserModel.addPrivateMessages(userId, newMessage._id);
@@ -69,6 +70,7 @@ MessageSchema.statics.addMessage = async function ({ message, userId, roomId }) 
     const withOwner = await MessageModel.findById(newMessage._id).populate({
       path: "createdBy",
       model: "User",
+      select: "username",
     });
 
     await RoomModel.findOneAndUpdate({ _id: roomId }, { $addToSet: { messages: newMessage._id } }, { new: true });

@@ -1,20 +1,24 @@
 const { UserModel } = require("../models/User");
 
 class UserController {
-  static async getAll() {
+  static async getAll(selectFields) {
+    if (Array.isArray(selectFields)) {
+      return await UserModel.find({}).select(selectFields);
+    }
+
     return await UserModel.find({});
+  }
+
+  static async signin({ username, password }) {
+    return await UserModel.signin({ username, password });
+  }
+
+  static async signup({ username, password, email }) {
+    return await UserModel.signup({ username, password, email });
   }
 
   static async updateStatus(username, online) {
     return await UserModel.findOneAndUpdate({ username }, { $set: { online } }, { new: true });
-  }
-
-  static async getUserUnseenMessages(userId) {
-    return await UserModel.findById(userId).select("unseenMessages");
-  }
-
-  static async resetUnseenMessages(userId, fromUserId) {
-    return await UserModel.resetUnseenMessages(userId, fromUserId);
   }
 
   static async getUserPrivateMessages(userId, currentUserId) {
@@ -34,12 +38,12 @@ class UserController {
     return user.privateMessages;
   }
 
-  static async signin({ username, password }) {
-    return await UserModel.signin({ username, password });
+  static async getUserUnseenMessages(userId) {
+    return await UserModel.findById(userId).select("unseenMessages");
   }
 
-  static async signup({ username, password, email }) {
-    return await UserModel.signup({ username, password, email });
+  static async resetUnseenMessages(userId, fromUserId) {
+    return await UserModel.resetUnseenMessages(userId, fromUserId);
   }
 }
 
