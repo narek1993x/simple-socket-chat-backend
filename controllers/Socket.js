@@ -82,7 +82,7 @@ class SocketController {
     if (isUpdateUnseen) {
       await this.requestMaker(UserController, "addUnseenMessages", body.directUserId, body.userId);
       const { unseenMessages } = await this.requestMaker(UserController, "getUserUnseenMessages", body.directUserId);
-      this.directAction(socketActions.USER_UPDATE, body.username, { fromUserId: body.userId, unseenMessages });
+      return this.directAction(socketActions.USER_UPDATE, body.username, { unseenMessages });
     }
 
     return this.directAction(action, body.username, message);
@@ -208,6 +208,8 @@ class SocketController {
     let currentUser;
     if (user && user.username) {
       currentUser = users.find((u) => u.username === user.username);
+      // Reset user old subscription
+      this.subscribedUsersUpdates(currentUser._id.toString(), null);
     }
 
     socket.emit("response", {
