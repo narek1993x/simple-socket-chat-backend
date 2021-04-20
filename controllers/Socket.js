@@ -25,8 +25,9 @@ const socketActionMethods = {
 };
 
 class SocketController {
-  constructor(socketIO, clients) {
+  constructor(socketIO, clients, subscribedUsers) {
     this.clients = clients;
+    this.subscribedUsers = subscribedUsers;
     this.addedUser = false;
     this.username = "";
 
@@ -75,10 +76,15 @@ class SocketController {
   }
 
   async privateMessageHandler({ action, body }) {
+    const isUpdateUnseen = !this.subscribedUsers.some((s) => s.who === body.directUserId && s.whom === body.userId);
     const message = await this.requestMaker(MessageController, "addPrivateMessage", body);
-    const { unseenMessages } = await this.requestMaker(UserController, "getUserUnseenMessages", body.directUserId);
 
-    this.directAction(socketActions.USER_UPDATE, body.username, { fromUserId: body.userId, unseenMessages });
+    if (isUpdateUnseen) {
+      await this.requestMaker(UserController, "addUnseenMessages", body.directUserId, body.userId);
+      const { unseenMessages } = await this.requestMaker(UserController, "getUserUnseenMessages", body.directUserId);
+      this.directAction(socketActions.USER_UPDATE, body.username, { fromUserId: body.userId, unseenMessages });
+    }
+
     return this.directAction(action, body.username, message);
   }
 
@@ -110,7 +116,9 @@ class SocketController {
   }
 
   async subscribeRoomHandler({ socket, action, body }) {
-    const roomMessages = await this.requestMaker(RoomController, "getRoomMessages", body.id);
+    this.subscribedUsersUpdates(body.currentUserId, body.roomId);
+
+    const roomMessages = await this.requestMaker(RoomController, "getRoomMessages", body.roomId);
     socket.join(body.roomName);
 
     return socket.emit("response", {
@@ -124,6 +132,8 @@ class SocketController {
   }
 
   async subscribeUserHandler({ socket, action, body }) {
+    this.subscribedUsersUpdates(body.currentUserId, body.id);
+
     const privateMessages = await this.requestMaker(
       UserController,
       "getUserPrivateMessages",
@@ -251,6 +261,20 @@ class SocketController {
       });
     } else {
       console.log("User does not exist or offline:" + username);
+    }
+  }
+
+  subscribedUsersUpdates(who, whom) {
+    const whoIndex = this.subscribedUsers.findIndex((s) => s.who === who);
+    const subscribe = {
+      who,
+      whom,
+    };
+
+    if (whoIndex !== -1) {
+      this.subscribedUsers[whoIndex] = subscribe;
+    } else {
+      this.subscribedUsers.push(subscribe);
     }
   }
 

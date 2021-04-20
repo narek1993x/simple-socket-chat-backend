@@ -38,6 +38,10 @@ class UserController {
     return user.privateMessages;
   }
 
+  static async addUnseenMessages(userId, fromUserId) {
+    await UserModel.addUnseenMessages(userId, fromUserId);
+  }
+
   static async getUserUnseenMessages(userId) {
     return await UserModel.findById(userId).select("unseenMessages");
   }

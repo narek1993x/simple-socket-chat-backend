@@ -49,7 +49,6 @@ MessageSchema.statics.addPrivateMessage = async function ({ message, userId, dir
 
     await UserModel.addPrivateMessages(userId, newMessage._id);
     await UserModel.addPrivateMessages(directUserId, newMessage._id);
-    await UserModel.addUnseenMessages(directUserId, userId);
 
     return withOwner;
   } catch (error) {

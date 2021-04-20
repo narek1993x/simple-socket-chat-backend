@@ -41,8 +41,9 @@ mongoose.connection
   .on("error", (error) => console.log("Error connecting to MongoLab:", error));
 
 const clients = {};
+const subscribedUsers = [];
 
 io.on("connection", (socket) => {
-  const socketController = new SocketController(io, clients);
+  const socketController = new SocketController(io, clients, subscribedUsers);
   socketController.initialize(socket);
 });
