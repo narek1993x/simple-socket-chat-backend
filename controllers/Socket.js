@@ -242,7 +242,8 @@ class SocketController {
     try {
       return await jwt.verify(token, process.env.SECRET);
     } catch (error) {
-      throw new AuthenticationError("Your session has ended. Please sign in again.");
+      this.errorSender("Your session has ended. Please sign in again.");
+      throw error;
     }
   }
 
