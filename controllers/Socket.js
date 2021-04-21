@@ -174,7 +174,7 @@ class SocketController {
       await this.loginSocket(socket, token, frontEndId);
     } catch (error) {
       this.addedUser = false;
-      console.error("Error when add user: ", error);
+      console.error("Error in loginHandler: ", error);
     }
   }
 
@@ -191,7 +191,7 @@ class SocketController {
       this.addedUser = true;
     } catch (error) {
       this.addedUser = false;
-      console.error("Error when login_with_token: ", error);
+      console.error("Error in loginWithTokenHandler: ", error);
     }
   }
 
@@ -234,15 +234,11 @@ class SocketController {
   }
 
   async getUserByToken(token) {
-    if (!token) {
-      console.error("getUserByToken: token is not defined");
-      return;
-    }
-
     try {
       return await jwt.verify(token, process.env.SECRET);
     } catch (error) {
-      this.errorSender("Your session has ended. Please sign in again.");
+      error.message = "Your session has ended. Please sign in again.";
+      this.errorSender(error);
       throw error;
     }
   }
@@ -253,17 +249,6 @@ class SocketController {
     } catch (error) {
       this.errorSender(error);
       throw error;
-    }
-  }
-
-  directAction(action, username, response) {
-    if (this.clients[username]) {
-      this.io.sockets.connected[this.clients[username].socket].emit("response", {
-        action,
-        response,
-      });
-    } else {
-      console.info("directAction: User does not exist or offline:" + username);
     }
   }
 
@@ -290,6 +275,17 @@ class SocketController {
     }
   }
 
+  directAction(action, username, response) {
+    if (this.clients[username]) {
+      this.io.sockets.connected[this.clients[username].socket].emit("response", {
+        action,
+        response,
+      });
+    } else {
+      console.info("directAction: User does not exist or offline: " + username);
+    }
+  }
+
   errorSender(error) {
     const username = this.username;
     const clients = this.clients;
@@ -300,7 +296,7 @@ class SocketController {
         error: error.toString(),
       });
     } else {
-      console.info("errorSender: User does not exist or offline:" + username);
+      console.info("errorSender: User does not exist or offline: " + username);
     }
   }
 }
