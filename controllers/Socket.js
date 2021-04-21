@@ -263,7 +263,7 @@ class SocketController {
         response,
       });
     } else {
-      console.log("User does not exist or offline:" + username);
+      console.info("directAction: User does not exist or offline:" + username);
     }
   }
 
@@ -294,10 +294,14 @@ class SocketController {
     const username = this.username;
     const clients = this.clients;
 
-    this.io.sockets.connected[clients[username].socket].emit("response", {
-      action: socketActions.ERROR,
-      error: error.toString(),
-    });
+    if (clients[username]) {
+      this.io.sockets.connected[clients[username].socket].emit("response", {
+        action: socketActions.ERROR,
+        error: error.toString(),
+      });
+    } else {
+      console.info("errorSender: User does not exist or offline:" + username);
+    }
   }
 }
 
