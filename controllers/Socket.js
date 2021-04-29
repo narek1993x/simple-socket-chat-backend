@@ -31,10 +31,13 @@ class SocketController {
     this.addedUser = false;
     this.username = "";
 
+    this.socket = null;
     this.io = socketIO;
   }
 
   initialize(socket) {
+    this.socket = socket;
+
     socket.on("disconnect", async () => {
       if (this.addedUser) {
         await UserController.updateStatus(this.username, false);
@@ -171,7 +174,7 @@ class SocketController {
 
     try {
       this.addedUser = true;
-      await this.loginSocket(socket, token, frontEndId);
+      await this.loginSocket(token, frontEndId);
     } catch (error) {
       this.addedUser = false;
       console.error("Error in loginHandler: ", error);
@@ -180,7 +183,7 @@ class SocketController {
 
   async loginWithTokenHandler({ socket, body, frontEndId }) {
     try {
-      const currentUser = await this.loginSocket(socket, body.token, frontEndId, true);
+      const currentUser = await this.loginSocket(body.token, frontEndId, true);
       this.username = currentUser.username;
       socket.username = this.username;
 
@@ -195,7 +198,7 @@ class SocketController {
     }
   }
 
-  async loginSocket(socket, token, frontEndId, isFromToken) {
+  async loginSocket(token, frontEndId, isFromToken) {
     const user = await this.getUserByToken(token);
 
     if (isFromToken) {
@@ -212,7 +215,7 @@ class SocketController {
       this.subscribedUsersUpdates(currentUser._id.toString(), null);
     }
 
-    socket.emit("response", {
+    this.socket.emit("response", {
       action: socketActions.LOGIN,
       frontEndId,
       response: {
@@ -223,7 +226,7 @@ class SocketController {
       },
     });
 
-    socket.broadcast.emit("response", {
+    this.socket.broadcast.emit("response", {
       action: socketActions.USER_JOINED,
       response: {
         users,
@@ -237,8 +240,7 @@ class SocketController {
     try {
       return await jwt.verify(token, process.env.SECRET);
     } catch (error) {
-      error.message = "Your session has ended. Please sign in again.";
-      this.errorSender(error);
+      this.errorSender("Your session has ended. Please sign in again.");
       throw error;
     }
   }
@@ -287,17 +289,10 @@ class SocketController {
   }
 
   errorSender(error) {
-    const username = this.username;
-    const clients = this.clients;
-
-    if (clients[username]) {
-      this.io.sockets.connected[clients[username].socket].emit("response", {
-        action: socketActions.ERROR,
-        error: error.toString(),
-      });
-    } else {
-      console.info("errorSender: User does not exist or offline: " + username);
-    }
+    this.socket.emit("response", {
+      action: socketActions.ERROR,
+      error: error.toString(),
+    });
   }
 }
 
