@@ -49,7 +49,7 @@ class SocketController {
           },
         });
 
-        this.deleteClient(socket);
+        this.deleteClient();
       }
     });
 
@@ -151,15 +151,8 @@ class SocketController {
     });
   }
 
-  async loginHandler({ socket, body, frontEndId }) {
-    if (this.addedUser) return;
-
+  async loginHandler({ body, frontEndId }) {
     this.username = body.username.toLowerCase();
-    socket.username = this.username;
-
-    this.clients[this.username] = {
-      socket: socket.id,
-    };
 
     let token;
     if (body.isSignin) {
@@ -173,27 +166,19 @@ class SocketController {
     }
 
     try {
-      this.addedUser = true;
       await this.loginSocket(token, frontEndId);
+      this.addNewUser(this.username);
     } catch (error) {
-      this.addedUser = false;
       console.error("Error in loginHandler: ", error);
     }
   }
 
-  async loginWithTokenHandler({ socket, body, frontEndId }) {
+  async loginWithTokenHandler({ body, frontEndId }) {
     try {
       const currentUser = await this.loginSocket(body.token, frontEndId, true);
       this.username = currentUser.username;
-      socket.username = this.username;
-
-      this.clients[this.username] = {
-        socket: socket.id,
-      };
-
-      this.addedUser = true;
+      this.addNewUser(this.username);
     } catch (error) {
-      this.addedUser = false;
       console.error("Error in loginWithTokenHandler: ", error);
     }
   }
@@ -268,9 +253,17 @@ class SocketController {
     }
   }
 
-  deleteClient(socket) {
+  addNewUser(username) {
+    this.addedUser = true;
+    this.socket.username = username;
+    this.clients[username] = {
+      socketId: this.socket.id,
+    };
+  }
+
+  deleteClient() {
     for (let name in this.clients) {
-      if (this.clients[name].socket === socket.id) {
+      if (this.clients[name].socketId === this.socket.id) {
         delete this.clients[name];
         break;
       }
@@ -279,7 +272,7 @@ class SocketController {
 
   directAction(action, username, response) {
     if (this.clients[username]) {
-      this.io.sockets.connected[this.clients[username].socket].emit("response", {
+      this.io.sockets.connected[this.clients[username].socketId].emit("response", {
         action,
         response,
       });
